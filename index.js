@@ -23,8 +23,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 passport.use(new SteamStrategy({
-  returnURL: 'http://localhost:5000/api/user',
-  realm: 'http://localhost:5000/',
+  returnURL: 'https://dota-connect-server.herokuapp.com/api/user',
+  realm: 'https://dota-connect-server.herokuapp.com',
   apiKey: process.env.STEAM_API_KEY
 },
   function (identifier, profile, done) {
