@@ -56,54 +56,29 @@ router.get('/health', function (request, response) {
 router.get('/login',
   passport.authenticate('steam'));
 
-router.get('/login/success',
-  passport.authenticate('steam', { failureRedirect: '/login' }),
-  function (req, response) {
-    var user_id = req
-      .query['openid.claimed_id']
-      .split('/')
-      .splice(-1, 1)[0];
+router.get('/login/success', function (req, response) {
+  console.log('Login successful...');
+  console.log('Fetching user data...');
+  var user_id = req
+    .query['openid.claimed_id']
+    .split('/')
+    .splice(-1, 1)[0];
 
-    var options = {
-      url: 'http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002',
-      qs: {
-        key: process.env.STEAM_API_KEY,
-        steamids: user_id
-      }
+  var options = {
+    url: 'http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002',
+    qs: {
+      key: process.env.STEAM_API_KEY,
+      steamids: user_id
     }
+  }
 
-    request(options, function (err, res, body) {
-      if (err) { console.log(err); return err; }
+  request(options, function (err, res, body) {
+    if (err) { console.log(err); return err; }
 
-      console.log('User data Fetch successful...');
-      response.send(JSON.parse(res.body).response.players[0]);
-    });
+    console.log('User data Fetch successful...');
+    response.send(JSON.parse(res.body).response.players[0]);
   });
-
-// router.get('/login/success', function (req, response) {
-//   passport.authenticate('steam')
-//   console.log('Login successful...');
-//   console.log('Fetching user data...');
-//   var user_id = req
-//     .query['openid.claimed_id']
-//     .split('/')
-//     .splice(-1, 1)[0];
-
-//   var options = {
-//     url: 'http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002',
-//     qs: {
-//       key: process.env.STEAM_API_KEY,
-//       steamids: user_id
-//     }
-//    }
-
-//   request(options, function (err, res, body) {
-//     if (err) { console.log(err); return err; }
-
-//     console.log('User data Fetch successful...');
-//     response.send(JSON.parse(res.body).response.players[0]);
-//   });
-// });
+});
 
 app.use('/api', router);
 app.listen(app.get('port'), function () {
