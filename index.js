@@ -24,7 +24,7 @@ app.use(bodyParser.json());
 
 passport.use(new SteamStrategy({
   returnURL: 'https://dota-connect-server.herokuapp.com/api/user',
-  realm: 'https://dota-connect-server.herokuapp.com/api/user',
+  realm: 'https://dota-connect-server.herokuapp.com',
   apiKey: process.env.STEAM_API_KEY
 },
   function (identifier, profile, done) {
@@ -71,7 +71,7 @@ router.get('/user', function (req, response) {
   }
 
   request(options , function (err, res, body) {
-    if (err) { console.log(err); return; }
+    if (err) { console.log(err); return err; }
     
     console.log('User data Fetch successful...');
     response.send(JSON.parse(res.body).response.players[0]);
