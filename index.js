@@ -3,8 +3,9 @@ var bodyParser = require('body-parser');
 var passport = require('passport');
 var util = require('util');
 var session = require('express-session');
-var pg = require('pg');
 var SteamStrategy = require('passport-steam').Strategy;
+var request = require('request');
+var pg = require('pg');
 
 var app = express();
 var router = express.Router();
@@ -23,8 +24,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 passport.use(new SteamStrategy({
-  returnURL: 'https://dota-connect-server.herokuapp.com/api/user',
-  realm: 'https://dota-connect-server.herokuapp.com',
+  returnURL: 'http://localhost:5000/api/user',
+  realm: 'http://localhost:5000/api/user',
   apiKey: process.env.STEAM_API_KEY
 },
   function (identifier, profile, done) {
@@ -71,8 +72,24 @@ router.get('/login',
   });
 
 router.get('/user', function (request, response) {
-  console.log(request.query.opendid.claimed_id);
-  response.send(request.query.openid.claimed_id);  
+  var user_id = request
+    .query['openid.claimed_id']
+    .split('/')
+    .splice(-1, 1);
+
+  console.log(user_id);
+  var url = 'http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002'
+  var params = {
+    key: process.env.STEAM_API_KEY,
+    steamids: user_id
+  }
+
+  request({ url: url, qs: params }, function (err, res, body) {
+    if (err) { console.log(err); return; }
+    console.log("Get response: " + response.statusCode);
+    console.log(response);
+    response.send(res);
+  });
 });
 
 app.use('/api', router);
