@@ -1,16 +1,47 @@
 var express = require('express');
 var bodyParser = require('body-parser');
+var passport = require('passport');
+var util = require('util');
+var session = require('express-session');
 var pg = require('pg');
-var cool = require('cool-ascii-faces');
+var SteamStrategy = require('passport-steam').Strategy;
 
 var app = express();
 var router = express.Router();
 
 app.set('port', (process.env.PORT || 5000));
+app.use(session({
+  secret: 'your secret',
+  name: 'dota-connect-server',
+  resave: true,
+  saveUninitialized: true
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-pg.defaults.ssl = true;
+passport.use(new SteamStrategy({
+  returnURL: 'http://localhost:5000/api/user',
+  realm: 'http://localhost:5000/',
+  apiKey: process.env.STEAM_API_KEY
+},
+  function (identifier, profile, done) {
+    // asynchronous verification, for effect...
+    process.nextTick(function () {
+
+      // To keep the example simple, the user's Steam profile is returned to
+      // represent the logged-in user.  In a typical application, you would want
+      // to associate the Steam account with a user record in your database,
+      // and return that user instead.
+      profile.identifier = identifier;
+      return done(null, profile);
+    });
+  }
+));
+
+// pg.defaults.ssl = true;
 pg.connect(process.env.DATABASE_URL, function (err, client) {
   if (err) throw err;
   console.log('Connected to Postgres!');
@@ -23,15 +54,23 @@ pg.connect(process.env.DATABASE_URL, function (err, client) {
   //   });
 });
 
-router.get('/cool', function (request, response) {
-  response.send(cool());
+router.use(function (req, res, next) {
+  console.log('Authenticating...');
+  next();
 });
 
-router.get('/update-heroes', function (request, response) {
-
+router.get('/health', function (request, response) {
+  response.send({ msg: 'dota-connect-server is running.' });
 });
 
-router.get('/update-items', function (request, response) {
+router.get('/login',
+  passport.authenticate('steam', { failureRedirect: '/' }),
+  function (req, res) {
+    console.log(res);
+    res.redirect('/health');
+  });
+
+router.get('/user', function (request, response) {
 
 });
 
