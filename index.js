@@ -2,7 +2,6 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var passport = require('passport');
 var util = require('util');
-var session = require('express-session');
 var SteamStrategy = require('passport-steam').Strategy;
 var request = require('request');
 
@@ -10,17 +9,18 @@ var app = express();
 var router = express.Router();
 
 app.set('port', (process.env.PORT || 5000));
-app.use(session({
-  secret: process.env.APP_SECRET,
-  name: 'dota-connect-server',
-  resave: true,
-  saveUninitialized: true
-}));
 app.use(passport.initialize());
-app.use(passport.session());
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+
+passport.serializeUser(function (user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function (obj, done) {
+  done(null, obj);
+});
 
 passport.use(new SteamStrategy({
   returnURL: 'https://dota-connect-server.herokuapp.com/api/login/success',
@@ -28,13 +28,7 @@ passport.use(new SteamStrategy({
   apiKey: process.env.STEAM_API_KEY
 },
   function (identifier, profile, done) {
-    // asynchronous verification, for effect...
     process.nextTick(function () {
-
-      // To keep the example simple, the user's Steam profile is returned to
-      // represent the logged-in user.  In a typical application, you would want
-      // to associate the Steam account with a user record in your database,
-      // and return that user instead.
       profile.identifier = identifier;
       return done(null, profile);
     });
@@ -58,33 +52,14 @@ router.get('/login',
 
 router.get('/login/success',
   passport.authenticate('steam', { failureRedirect: '/login' }),
-  function(req, res) {
-    // Successful authentication, redirect home.
-    res.redirect('/');
+  function (req, res) {
+    var user_id = req
+      .query['openid.claimed_id']
+      .split('/')
+      .splice(-1, 1)[0];
+
+    res.send(user_id);
   });
-
-// router.get('/login/success', function (req, response) {
-//   console.log('Login successful...');
-//   var user_id = req
-//     .query['openid.claimed_id']
-//     .split('/')
-//     .splice(-1, 1)[0];
-
-//   var options = {
-//     url: 'http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002',
-//     qs: {
-//       key: process.env.STEAM_API_KEY,
-//       steamids: user_id
-//     }
-//   }
-//   console.log('Fetching user data...');
-//   request(options, function (err, res, body) {
-//     if (err) { console.log(err); return err; }
-
-//     console.log('User data Fetch successful...');
-//     response.send(JSON.parse(res.body).response.players[0]);
-//   });
-// });
 
 app.use('/api', router);
 app.listen(app.get('port'), function () {
