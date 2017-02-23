@@ -56,10 +56,8 @@ router.get('/health', function (request, response) {
 router.get('/login',
   passport.authenticate('steam'));
 
-router.get('/login/success', passport.authenticate('steam', { failureRedirect: '/login' }),
-  function (req, response) {
+router.get('/login/success', function (req, response) {
   console.log('Login successful...');
-  console.log('Fetching user data...');
   var user_id = req
     .query['openid.claimed_id']
     .split('/')
@@ -72,7 +70,7 @@ router.get('/login/success', passport.authenticate('steam', { failureRedirect: '
       steamids: user_id
     }
   }
-
+  console.log('Fetching user data...');
   request(options, function (err, res, body) {
     if (err) { console.log(err); return err; }
 
