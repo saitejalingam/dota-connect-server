@@ -56,28 +56,35 @@ router.get('/health', function (request, response) {
 router.get('/login',
   passport.authenticate('steam'));
 
-router.get('/login/success', function (req, response) {
-  console.log('Login successful...');
-  var user_id = req
-    .query['openid.claimed_id']
-    .split('/')
-    .splice(-1, 1)[0];
-
-  var options = {
-    url: 'http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002',
-    qs: {
-      key: process.env.STEAM_API_KEY,
-      steamids: user_id
-    }
-  }
-  console.log('Fetching user data...');
-  request(options, function (err, res, body) {
-    if (err) { console.log(err); return err; }
-
-    console.log('User data Fetch successful...');
-    response.send(JSON.parse(res.body).response.players[0]);
+router.get('/login/success',
+  passport.authenticate('steam', { failureRedirect: '/login' }),
+  function(req, res) {
+    // Successful authentication, redirect home.
+    res.redirect('/');
   });
-});
+
+// router.get('/login/success', function (req, response) {
+//   console.log('Login successful...');
+//   var user_id = req
+//     .query['openid.claimed_id']
+//     .split('/')
+//     .splice(-1, 1)[0];
+
+//   var options = {
+//     url: 'http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002',
+//     qs: {
+//       key: process.env.STEAM_API_KEY,
+//       steamids: user_id
+//     }
+//   }
+//   console.log('Fetching user data...');
+//   request(options, function (err, res, body) {
+//     if (err) { console.log(err); return err; }
+
+//     console.log('User data Fetch successful...');
+//     response.send(JSON.parse(res.body).response.players[0]);
+//   });
+// });
 
 app.use('/api', router);
 app.listen(app.get('port'), function () {
