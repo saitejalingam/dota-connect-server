@@ -11,7 +11,7 @@ var router = express.Router();
 
 app.set('port', (process.env.PORT || 5000));
 app.use(session({
-  secret: process.env.APP_SECRET,
+  secret: 'process.env.APP_SECRET',
   name: 'dota-connect-server',
   resave: true,
   saveUninitialized: true
@@ -24,7 +24,7 @@ app.use(bodyParser.json());
 
 passport.use(new SteamStrategy({
   returnURL: 'https://dota-connect-server.herokuapp.com/api/user',
-  realm: 'https://dota-connect-server.herokuapp.com',
+  realm: 'https://dota-connect-server.herokuapp.com/api/user',
   apiKey: process.env.STEAM_API_KEY
 },
   function (identifier, profile, done) {
