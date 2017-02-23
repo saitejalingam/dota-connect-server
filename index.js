@@ -11,7 +11,7 @@ var router = express.Router();
 
 app.set('port', (process.env.PORT || 5000));
 app.use(session({
-  secret: 'process.env.APP_SECRET',
+  secret: process.env.APP_SECRET,
   name: 'dota-connect-server',
   resave: true,
   saveUninitialized: true
