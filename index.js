@@ -5,14 +5,13 @@ var util = require('util');
 var session = require('express-session');
 var SteamStrategy = require('passport-steam').Strategy;
 var request = require('request');
-var pg = require('pg');
 
 var app = express();
 var router = express.Router();
 
 app.set('port', (process.env.PORT || 5000));
 app.use(session({
-  secret: 'your secret',
+  secret: process.env.APP_SECRET,
   name: 'dota-connect-server',
   resave: true,
   saveUninitialized: true
@@ -24,8 +23,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 passport.use(new SteamStrategy({
-  returnURL: 'http://localhost:5000/api/user',
-  realm: 'http://localhost:5000/api/user',
+  returnURL: 'https://dota-connect-server.herokuapp.com/api/user',
+  realm: 'https://dota-connect-server.herokuapp.com',
   apiKey: process.env.STEAM_API_KEY
 },
   function (identifier, profile, done) {
@@ -42,19 +41,6 @@ passport.use(new SteamStrategy({
   }
 ));
 
-// pg.defaults.ssl = true;
-pg.connect(process.env.DATABASE_URL, function (err, client) {
-  if (err) throw err;
-  console.log('Connected to Postgres!');
-
-
-  // client
-  //   .query('SELECT table_schema,table_name FROM information_schema.tables;')
-  //   .on('row', function (row) {
-  //     console.log(JSON.stringify(row));
-  //   });
-});
-
 router.use(function (req, res, next) {
   console.log('Authenticating...');
   next();
@@ -65,30 +51,30 @@ router.get('/health', function (request, response) {
 });
 
 router.get('/login',
-  passport.authenticate('steam', { failureRedirect: '/' }),
-  function (req, res) {
-    console.log(res);
-    res.redirect('/health');
-  });
+  passport.authenticate('steam', { failureRedirect: '/' })
+);
 
-router.get('/user', function (request, response) {
-  var user_id = request
+router.get('/user', function (req, response) {
+  console.log('Login successful...');
+  console.log('Fetching user data...');
+  var user_id = req
     .query['openid.claimed_id']
     .split('/')
-    .splice(-1, 1);
+    .splice(-1, 1)[0];
 
-  console.log(user_id);
-  var url = 'http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002'
-  var params = {
-    key: process.env.STEAM_API_KEY,
-    steamids: user_id
+  var options = {
+    url: 'http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002',
+    qs: {
+      key: process.env.STEAM_API_KEY,
+      steamids: user_id
+    }
   }
 
-  request({ url: url, qs: params }, function (err, res, body) {
+  request(options , function (err, res, body) {
     if (err) { console.log(err); return; }
-    console.log("Get response: " + response.statusCode);
-    console.log(response);
-    response.send(res);
+    
+    console.log('User data Fetch successful...');
+    response.send(JSON.parse(res.body).response.players[0]);
   });
 });
 
