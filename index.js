@@ -71,7 +71,8 @@ router.get('/login',
   });
 
 router.get('/user', function (request, response) {
-
+  console.log(request.params.opendid.claimed_id);
+  response.send(request.params.opendid.claimed_id);  
 });
 
 app.use('/api', router);
