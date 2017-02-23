@@ -42,7 +42,10 @@ passport.use(new SteamStrategy({
 ));
 
 router.use(function (req, res, next) {
-  console.log('Authenticating...');
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Credentials', true);
+  res.header('Access-Control-Allow-Methods', 'POST, GET, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
   next();
 });
 
@@ -70,9 +73,9 @@ router.get('/user', function (req, response) {
     }
   }
 
-  request(options , function (err, res, body) {
+  request(options, function (err, res, body) {
     if (err) { console.log(err); return err; }
-    
+
     console.log('User data Fetch successful...');
     response.send(JSON.parse(res.body).response.players[0]);
   });
