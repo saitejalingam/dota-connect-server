@@ -53,12 +53,7 @@ router.get('/login',
 router.get('/login/success',
   passport.authenticate('steam', { failureRedirect: '/login' }),
   function (req, res) {
-    var user_id = req
-      .query['openid.claimed_id']
-      .split('/')
-      .splice(-1, 1)[0];
-
-    res.send(user_id);
+    res.send();
   });
 
 app.use('/api', router);
